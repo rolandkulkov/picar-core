@@ -4,55 +4,54 @@ import time
 
 app = Flask(__name__)
 
+PIN_LEFT =  26
+PIN_RIGHT = 16
+PIN_ENGINE_ON = 20
+PIN_ENGINE_OFF = 21
+
 def init():
     gpio.setmode(gpio.BCM)
-    gpio.setup(21, gpio.OUT)
-    gpio.setup(20, gpio.OUT)
-    gpio.setup(26, gpio.OUT)
-    gpio.setup(16, gpio.OUT)
+    gpio.setup(PIN_ENGINE_OFF, gpio.OUT)
+    gpio.setup(PIN_ENGINE_ON, gpio.OUT)
+    gpio.setup(PIN_LEFT, gpio.OUT)
+    gpio.setup(PIN_RIGHT, gpio.OUT)
+
+init()
 
 def cleanup():
     gpio.cleanup()
 
 @app.route('/forward', methods=['GET'])
 def api_forward():
-    init()
     gpio.output(21, False)
     gpio.output(20, True)
-    time.sleep(0.2)  # You can adjust the sleep duration if needed
     cleanup()
-    return jsonify({"status": "success", "message": "Moved forward"})
+    return '', 200
 
 @app.route('/backwards', methods=['GET'])
 def api_backwards():
-    init()
     gpio.output(21, True)
     gpio.output(20, False)
-    time.sleep(0.2)
     cleanup()
-    return jsonify({"status": "success", "message": "Moved backwards"})
+    return '', 200
 
 @app.route('/right', methods=['GET'])
 def api_right():
-    init()
     gpio.output(16, True)
     gpio.output(26, False)
     gpio.output(21, False)
     gpio.output(20, False)
-    time.sleep(0.2)
     cleanup()
-    return jsonify({"status": "success", "message": "Turned right"})
+    return '', 200
 
 @app.route('/left', methods=['GET'])
 def api_left():
-    init()
     gpio.output(16, False)
     gpio.output(26, True)
     gpio.output(21, False)
     gpio.output(20, False)
-    time.sleep(0.2)
     cleanup()
-    return jsonify({"status": "success", "message": "Turned left"})
+    return '', 200
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
