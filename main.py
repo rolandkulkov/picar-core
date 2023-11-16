@@ -19,6 +19,7 @@ def api_forward():
     init()
     gpio.output(21, False)
     gpio.output(20, True)
+    time.sleep(0.1)  # You can adjust the sleep duration if needed
     cleanup()
     return '', 200
 
