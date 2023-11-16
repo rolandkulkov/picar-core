@@ -37,7 +37,6 @@ def move_pins(left_forward, right_forward, left_backward, right_backward):
 def move_and_cleanup(left_forward, right_forward, left_backward, right_backward):
     move_pins(left_forward, right_forward, left_backward, right_backward)
     time.sleep(SLEEP_DURATION)
-    cleanup()
 
 @socketio.on('control')
 def handle_control(data):
@@ -58,4 +57,3 @@ def handle_control(data):
 if __name__ == '__main__':
     atexit.register(cleanup)
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
-
