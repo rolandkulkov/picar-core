@@ -19,6 +19,7 @@ def api_forward():
     init()
     gpio.output(21, False)
     gpio.output(20, True)
+    time.sleep(0.2)  # You can adjust the sleep duration if needed
     cleanup()
     return jsonify({"status": "success", "message": "Moved forward"})
 
@@ -27,7 +28,7 @@ def api_backwards():
     init()
     gpio.output(21, True)
     gpio.output(20, False)
-    time.sleep(0.1)
+    time.sleep(0.2)
     cleanup()
     return jsonify({"status": "success", "message": "Moved backwards"})
 
