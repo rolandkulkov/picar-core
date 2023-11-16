@@ -1,13 +1,10 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO
-
+from flask import Flask, jsonify
 import RPi.GPIO as gpio
 import time
 import atexit
 from threading import Thread
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 
 # Define GPIO pins
 LEFT_FORWARD_PIN = 21
@@ -37,23 +34,35 @@ def move_pins(left_forward, right_forward, left_backward, right_backward):
 def move_and_cleanup(left_forward, right_forward, left_backward, right_backward):
     move_pins(left_forward, right_forward, left_backward, right_backward)
     time.sleep(SLEEP_DURATION)
+    cleanup()
 
-@socketio.on('control')
-def handle_control(data):
-    direction = data['direction']
+@app.route('/forward', methods=['GET'])
+def api_forward():
     init()
+    move_and_cleanup(False, True, False, True)
+    return '', 200
 
-    if direction == 'forward':
-        move_and_cleanup(False, True, False, True)
-    elif direction == 'backward':
-        move_and_cleanup(True, False, True, False)
-    elif direction == 'right':
-        move_and_cleanup(False, False, False, True)
-    elif direction == 'left':
-        move_and_cleanup(False, True, True, False)
+@app.route('/backwards', methods=['GET'])
+def api_backwards():
+    init()
+    move_and_cleanup(True, False, True, False)
+    return jsonify({"status": "success", "message": "Moved backward"})
 
+@app.route('/right', methods=['GET'])
+def api_right():
+    init()
+    move_and_cleanup(False, False, False, True)
+    return jsonify({"status": "success", "message": "Turned right"})
+
+@app.route('/left', methods=['GET'])
+def api_left():
+    init()
+    move_and_cleanup(False, True, True, False)
+    return jsonify({"status": "success", "message": "Turned left"})
+
+def exit_handler():
     cleanup()
 
 if __name__ == '__main__':
-    atexit.register(cleanup)
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    atexit.register(exit_handler)
+    app.run(debug=True, host='0.0.0.0', port=5000)
