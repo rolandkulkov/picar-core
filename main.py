@@ -69,8 +69,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         if message == 'left':
             api_left()
+        elif message == 'right':
+            api_right()
+        elif message == 'forward':
+            api_forward()
+        elif message == 'backwards':
+            api_backwards()
         else:
-         self.write_message(f"Received: {message}")
+            self.write_message(f"Received: {message}")
 
 application = tornado.web.Application([
     (r'/', WebSocketHandler),
