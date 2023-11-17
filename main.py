@@ -1,10 +1,10 @@
-from flask import Flask, jsonify
 import RPi.GPIO as gpio
 import time
 import atexit
 from threading import Thread
-
-app = Flask(__name__)
+import tornado.web
+import tornado.websocket
+import time
 
 # Define GPIO pins
 LEFT_FORWARD_PIN = 21
@@ -34,35 +34,49 @@ def move_pins(left_forward, right_forward, left_backward, right_backward):
 def move_and_cleanup(left_forward, right_forward, left_backward, right_backward):
     move_pins(left_forward, right_forward, left_backward, right_backward)
     time.sleep(SLEEP_DURATION)
-    cleanup()
+    #cleanup()
 
-@app.route('/forward', methods=['GET'])
 def api_forward():
-    init()
-    move_and_cleanup(False, True, False, True)
-    return '', 200
-
-@app.route('/backwards', methods=['GET'])
-def api_backwards():
-    init()
-    move_and_cleanup(True, False, True, False)
-    return jsonify({"status": "success", "message": "Moved backward"})
-
-@app.route('/right', methods=['GET'])
-def api_right():
-    init()
     move_and_cleanup(False, False, False, True)
-    return jsonify({"status": "success", "message": "Turned right"})
 
-@app.route('/left', methods=['GET'])
+def api_backwards():
+    move_and_cleanup(False, False, True, False)
+
+def api_right():
+    move_and_cleanup(False, False, False, True)
+
 def api_left():
-    init()
-    move_and_cleanup(False, True, True, False)
-    return jsonify({"status": "success", "message": "Turned left"})
+    move_and_cleanup(False, True, False, False)
 
 def exit_handler():
     cleanup()
 
-if __name__ == '__main__':
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
+    def open(self):
+        print("open success")
+        # timer that sends data to the front end once per second
+        self.timer = tornado.ioloop.PeriodicCallback(self.send_data, 1000)
+        self.timer.start()
+
+    def on_close(self):
+        self.timer.stop()
+
+    def send_data(self):
+        # send the current time to the front end
+        self.write_message('Now is' + str(time.time()))
+    def on_message(self, message):
+        if message == 'left':
+            api_left()
+        else:
+         self.write_message(f"Received: {message}")
+
+application = tornado.web.Application([
+    (r'/', WebSocketHandler),
+])
+
+if _name_ == '__main__':
     atexit.register(exit_handler)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    application.listen(3001)
+    tornado.ioloop.IOLoop.instance().start()
